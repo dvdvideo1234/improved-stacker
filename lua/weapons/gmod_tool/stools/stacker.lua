@@ -658,7 +658,7 @@ function TOOL:LeftClick( trace )
 	local lastEnt  = ent
 	local newEnts  = { ent }
 	
-	local newEnt
+	local newEnt, stackdir, height, thisoffset
 	
 	undo.Create( "stacker" )
 	
@@ -674,6 +674,8 @@ function TOOL:LeftClick( trace )
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
 		end
 		
+    if(lastEnt and lastEnt:IsValid()) then thisoffset:Rotate(entAng) end
+    
 		entPos = entPos + stackdir * height + thisoffset
 		entAng = entAng + rotate
 		
@@ -842,12 +844,12 @@ local CALC_POS = {
 	},
 	
 	[MODE_PROP] = {
-		[DIRECTION_UP]     = function( ang, offset, hi, lo ) return  ang:Up(),      math.abs( hi.z - lo.z ), ( ang:Up()      * offset.X) + (-ang:Forward() * offset.Z) + ( ang:Right()   * offset.Y) end,
-		[DIRECTION_DOWN]   = function( ang, offset, hi, lo ) return -ang:Up(),      math.abs( hi.z - lo.z ), (-ang:Up()      * offset.X) + ( ang:Forward() * offset.Z) + ( ang:Right()   * offset.Y) end,
-		[DIRECTION_FRONT]  = function( ang, offset, hi, lo ) return  ang:Forward(), math.abs( hi.x - lo.x ), ( ang:Forward() * offset.X) + ( ang:Up()      * offset.Z) + ( ang:Right()   * offset.Y) end,
-		[DIRECTION_BEHIND] = function( ang, offset, hi, lo ) return -ang:Forward(), math.abs( hi.x - lo.x ), (-ang:Forward() * offset.X) + ( ang:Up()      * offset.Z) + (-ang:Right()   * offset.Y) end,
-		[DIRECTION_RIGHT]  = function( ang, offset, hi, lo ) return  ang:Right(),   math.abs( hi.y - lo.y ), ( ang:Right()   * offset.X) + ( ang:Up()      * offset.Z) + (-ang:Forward() * offset.Y) end,
-		[DIRECTION_LEFT]   = function( ang, offset, hi, lo ) return -ang:Right(),   math.abs( hi.y - lo.y ), (-ang:Right()   * offset.X) + ( ang:Up()      * offset.Z) + ( ang:Forward() * offset.Y) end,
+		[DIRECTION_UP]     = function( ang, offset, hi, lo ) return  ang:Up(),      math.abs( hi.z - lo.z ), ( ang:Up()      * offset.X) + ( ang:Right()   * offset.Y) + (-ang:Forward() * offset.Z) end,
+		[DIRECTION_DOWN]   = function( ang, offset, hi, lo ) return -ang:Up(),      math.abs( hi.z - lo.z ), (-ang:Up()      * offset.X) + ( ang:Right()   * offset.Y) + ( ang:Forward() * offset.Z) end,
+		[DIRECTION_FRONT]  = function( ang, offset, hi, lo ) return  ang:Forward(), math.abs( hi.x - lo.x ), ( ang:Forward() * offset.X) + ( ang:Right()   * offset.Y) + ( ang:Up()      * offset.Z) end,
+		[DIRECTION_BEHIND] = function( ang, offset, hi, lo ) return -ang:Forward(), math.abs( hi.x - lo.x ), (-ang:Forward() * offset.X) + (-ang:Right()   * offset.Y) + ( ang:Up()      * offset.Z) end,
+		[DIRECTION_RIGHT]  = function( ang, offset, hi, lo ) return  ang:Right(),   math.abs( hi.y - lo.y ), ( ang:Right()   * offset.X) + (-ang:Forward() * offset.Y) + ( ang:Up()      * offset.Z) end,
+		[DIRECTION_LEFT]   = function( ang, offset, hi, lo ) return -ang:Right(),   math.abs( hi.y - lo.y ), (-ang:Right()   * offset.X) + ( ang:Forward() * offset.Y) + ( ang:Up()      * offset.Z) end,
 	},
 }
 
@@ -979,14 +981,16 @@ function TOOL:UpdateGhostStack( ent )
 		if ( i == 1 or ( mode == MODE_PROP and recalc ) ) then
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
 		end
-
+    
+    if(lastEnt and lastEnt:IsValid()) then thisoffset:Rotate(entAng) end
+    
 		entPos = entPos + stackdir * height + thisoffset
 		entAng = entAng + rotate
 	
 		local ghost = ghoststack[ i ]
 		
-		ghost:SetAngles( entAng )
 		ghost:SetPos( entPos )
+		ghost:SetAngles( entAng )
 		ghost:SetMaterial( ( applyMaterial and entMat ) or "" )
 		ghost:SetColor( ( applyColor and entCol ) or TRANSPARENT )
 		ghost:SetNoDraw( false )
